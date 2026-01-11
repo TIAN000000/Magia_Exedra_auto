@@ -1,5 +1,4 @@
 import time
-import 点击
 import os
 import sys
 import winreg
@@ -14,8 +13,13 @@ from PySide6.QtWidgets import QApplication,QButtonGroup,QHBoxLayout,QRadioButton
 from PySide6.QtCore import Qt, QObject,QThread,Signal
 from PySide6.QtGui import QIcon
 
-# pyinstaller.exe -D -i main.ico  main.py
+#其他自己写的文件
+import click_behavior
+import click_action
 
+
+# pyinstaller.exe -D -i main.ico  main.py
+#这个是导出用的
 
 #不知道干啥的，gpt要我写的，说是能缓解导入到其他设备的问题
 if getattr(sys, "frozen", False):
@@ -37,95 +41,6 @@ guaji_2=3#刷圣遗物
 #圣遗物喝体力药的次数 1是不喝药，4是喝三次，要多一次
 crystalis_lp_recover_times=9
 
-
-#各种全局函数
-
-#尝试点击一次，查询组内所有图片，返回点击结果return
-def click_item_with_result(self, picture, name):
-    check = 1  # 这个是判断要不要继续循环
-    click_time = 1  # 尝试点击一次这玩意+1
-    click_file = ''
-
-
-    click_file = (f'{picture}_{click_time}.png')
-    file_exist = Path(click_file)
-
-    while (check == 1 and file_exist.exists()):
-        click_file = (f'{picture}_{click_time}.png')
-        click_time = click_time + 1
-
-        file_exist=Path(click_file)
-        print(f'文件状态是{file_exist}\n')
-
-        if file_exist.exists():
-            check = 点击.routine(click_file, name)
-            print(f'点击{click_file}，点击返回值是{check}，成功点击是2，不点击是1')
-            time.sleep(0.4)
-        else:
-            print('文件耗尽\n')
-
-    if (check == 1):
-        click_time = click_time - 1
-        print(f'尝试了{click_time-1}次数，没有找到{name}，当前点击事件执行结束\n')
-        return check
-
-    if (check == 2):
-        print(f'点击{name}事件完成，当前点击事件执行结束\n')
-        time.sleep(0.5)
-        return check
-
-
-
-#尝试寻找目标一次，查询组内所有图片，返回寻找结果return
-def find_item_with_result(self, picture, name):
-    check = 1  # 这个是判断要不要继续循环
-    click_time = 1  # 尝试点击一次这玩意+1
-    click_file = ''
-
-    click_file = (f'{picture}_{click_time}.png')
-    file_exist = Path(click_file)
-
-    while (check == 1 and file_exist.exists()):
-        click_file = (f'{picture}_{click_time}.png')
-        click_time = click_time + 1
-
-        file_exist = Path(click_file)
-        print(f'文件状态是{file_exist}\n')
-        if file_exist.exists():
-            check = 点击.routine_only_find(click_file, name)
-            print(f'寻找{click_file}，寻找返回值是{check}，成功寻找是2，没找到是1')
-            time.sleep(0.4)
-        else:
-            print('文件耗尽\n')
-
-    if (check == 1):
-        click_time = click_time - 1
-        print(f'尝试了{click_time-1}次数，没有找到{name}，当前寻找事件执行结束\n')
-        return check
-    if (check == 2):
-        print(f'寻找{name}事件完成，找到了，当前寻找事件执行结束\n')
-        time.sleep(0.5)
-        return check
-
-#用于点击特定位置，输入坐标，第一个为窗口左到右的偏移，第二个上到下，注意上到下会有一个窗体厚度，不同缩放倍率会不同！
-def click_position(move_lelt,move_top):
-    # 把游戏窗口弄出来
-    left, top = 点击.find_win('MadokaExedra')
-    time.sleep(0.1)
-    pyautogui.moveTo(left + move_lelt, top + move_top)
-    time.sleep(0.1)
-    pyautogui.click(left + move_lelt, top + move_top,button='left')
-    time.sleep(0.1)
-    return 0
-
-def move_a_to_b(move_lelt_a,move_top_a,move_lelt_b,move_top_b):
-    left, top = 点击.find_win('MadokaExedra')
-    time.sleep(0.1)
-    pyautogui.moveTo(left + move_lelt_a, top + move_top_a)
-    time.sleep(0.1)
-    pyautogui.dragTo(left + move_lelt_b, top + move_top_b,duration=2,button='left')
-    time.sleep(0.1)
-    return 0
 
 
 class mywindow(QWidget):
@@ -473,15 +388,17 @@ class WorkThread_1 (QThread):
     def into_link_raid(self):
         result = 1
 
-        click_position(1000,500)
+        click_action.click_position(1000, 500)
         self.signal.emit(str('把游戏弄到前台，然后随便碰一下中间'))
-        click_position(1200, 600)
+        time.sleep(0.2)
+        click_action.click_position(1200, 600)
         self.signal.emit(str('quests点击完成，这一下使用的是位置点击，不是识图，如果没有点到说明其他问题发生了'))
+        time.sleep(0.2)
 
 
         #在quest界面点击link raid
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid', 'link_raid')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid', 'link_raid')
             if (result ==2):
                 self.signal.emit(str('link_raid点击完成'))
             else:
@@ -494,7 +411,7 @@ class WorkThread_1 (QThread):
 
         #进入到boss大脸的界面，在link raid界面点击backup_requests
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests', 'backup_requests')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests', 'backup_requests')
             if (result ==2):
                 self.signal.emit(str('第一层的backup_requests点击完成'))
             else:
@@ -503,7 +420,7 @@ class WorkThread_1 (QThread):
 
         #点击第二层backup_requests，进入到加入界面
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/backup_requests', 'backup_requests')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/backup_requests', 'backup_requests')
             if (result ==2):
                 self.signal.emit(str('第二层的backup_requests点击完成'))
             else:
@@ -512,7 +429,7 @@ class WorkThread_1 (QThread):
 
     #判断右下角的join是不是黑色的，黑色的代表打满了
     def check_join_full(self):
-        self.join_full = find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/no_join','no_join')
+        self.join_full = click_action.find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/no_join', 'no_join')
         if (self.join_full == 1):
             self.signal.emit(str('战斗没有打满，正常运行'))
         else:
@@ -522,7 +439,7 @@ class WorkThread_1 (QThread):
         if(self.join_full==2) :
             # 点击左边的joined battle
             while (guaji_1 == 1 and result == 1 and self.join_full == 2):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles',
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles',
                                                 'joined_battles')
                 if (result == 2):
                     self.signal.emit(str('joined_battles点击完成'))
@@ -537,8 +454,13 @@ class WorkThread_1 (QThread):
 
         while(self.win_exist ==1):
             self.signal.emit(str(f'进入joined battle，开始清空已经结束的战斗。需要保证第一次能够清除后才会回到寻找战斗界面'))
-            move_a_to_b(700, 600, 700, 200)
-            find_one_win = find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
+            click_action.move_a_to_b(700, 600, 700, 200)
+            click_action.move_a_to_b(700, 600, 700, 200)
+            click_action.move_a_to_b(700, 600, 700, 200)
+            self.signal.emit(
+                str(f'完成下移，开始找结束的对局'))
+            time.sleep(2)#等一下防止出问题
+            find_one_win = click_action.find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
             self.signal.emit(str(f'寻找win/loss的状态是{find_one_win}，1是没有了，2是还存在。此处没有找到会一直等待到找到为止，否则会无法继续'))
             if find_one_win==2:
                 self.win_exist=2
@@ -549,20 +471,20 @@ class WorkThread_1 (QThread):
 
                 # 点击刷新
                 while (guaji_1 == 1 and result == 1):
-                    result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/refresh', 'refresh')
+                    result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/refresh', 'refresh')
                     if (result == 2):
                         self.signal.emit(str('refresh点击完成'))
                     else:
                         self.signal.emit(str('refresh没有找到，继续重复运行'))
 
         result = 1
-        self.clean_fin=find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
+        self.clean_fin= click_action.find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
         self.signal.emit(str(f'win/loss的状态是{self.clean_fin}，1是没有了，2是还存在'))
 
         if (self.clean_fin==2):
             # 点击左边的joined battle，进入选择
             while (guaji_1 == 1 and result == 2):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles',
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles',
                                                 'joined_battles')
                 if (result == 2):
                     self.signal.emit(str('joined_battles点击完成'))
@@ -572,7 +494,7 @@ class WorkThread_1 (QThread):
 
             # 点击win/lose
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
                 if (result == 2):
                     self.signal.emit(str('win/lose点击完成'))
                 else:
@@ -581,7 +503,7 @@ class WorkThread_1 (QThread):
 
             # 点击右下角的ended
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/joined_battles/ended', 'ended')
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/joined_battles/ended', 'ended')
                 if (result == 2):
                     self.signal.emit(str('ended点击完成'))
                 else:
@@ -590,7 +512,7 @@ class WorkThread_1 (QThread):
 
             # 点击结算界面的tap_to_countinue
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/tap_to_countinue',
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/tap_to_countinue',
                                                 'tap_to_countinue')
                 if (result == 2):
                     self.signal.emit(str('tap_to_countinue点击完成'))
@@ -600,7 +522,7 @@ class WorkThread_1 (QThread):
 
             # 点击结算界面界面的back，点完后回到前面
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/back', 'back')
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/back', 'back')
                 if (result == 2):
                     self.signal.emit(str('back点击完成'))
                 else:
@@ -609,7 +531,7 @@ class WorkThread_1 (QThread):
 
             #返回后，点击左侧的joined battle，这个没有意义，主要是防止延迟导致出问题，如果joined battle能点击，说明加载好了
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles',
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles',
                                                 'joined_battles')
                 if (result == 2):
                     self.signal.emit(str('joined_battles点击完成，这一个点击主要为了防止延迟'))
@@ -617,7 +539,7 @@ class WorkThread_1 (QThread):
                     self.signal.emit(str('joined_battles没有找到，继续重复运行，这一个点击主要为了防止延迟'))
             result = 1
 
-            self.clean_fin = find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
+            self.clean_fin = click_action.find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
             self.signal.emit(str(f'win/loss的状态是{self.clean_fin}，1是没有了，2是还存在'))
 
         else:
@@ -625,7 +547,7 @@ class WorkThread_1 (QThread):
 
             #点击第二层的backup_requests，回到选战斗界面
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/backup_requests',
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/backup_requests',
                                                 'backup_requests')
                 if (result == 2):
                     self.signal.emit(str('第二层的backup_requests点击完成'))
@@ -635,7 +557,7 @@ class WorkThread_1 (QThread):
 
             # 点击刷新
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/refresh', 'refresh')
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/refresh', 'refresh')
                 if (result == 2):
                     self.signal.emit(str('refresh点击完成'))
                 else:
@@ -649,7 +571,7 @@ class WorkThread_1 (QThread):
 
         #点击刷新
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/refresh', 'refresh')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/refresh', 'refresh')
             if (result ==2):
                 self.signal.emit(str('refresh点击完成'))
             else:
@@ -667,7 +589,7 @@ class WorkThread_1 (QThread):
 
 
         while(find_time>1 and self.level_choice_exist==1):
-            self.level_choice_exist = find_item_with_result(self,
+            self.level_choice_exist = click_action.find_item_with_result(self,
                                                             f'./aim/quests/link_raid/backup_requests/lv/lv{self.level_choice}/lv{self.level_choice}',
                                                             f'lv{self.level_choice}')
             if (self.level_choice_exist == 2):
@@ -675,13 +597,13 @@ class WorkThread_1 (QThread):
             else:
                 find_time=find_time-1
                 self.signal.emit(str(f'lv{self.level_choice}没有找到，往下拉动，还有的寻找次数为{find_time-2}'))
-                move_a_to_b(700, 600, 700, 200)
-                time.sleep(1)
+                click_action.move_a_to_b(700, 600, 700, 200)
+                time.sleep(4)
                 self.signal.emit(str(f'往下移动完成'))
 
         if (self.level_choice_exist == 2):
             if (guaji_1 == 1):  # 这里不可以用while，只能运行一遍
-                result = click_item_with_result(self,
+                result = click_action.click_item_with_result(self,
                                                     f'./aim/quests/link_raid/backup_requests/lv/lv{self.level_choice}/lv{self.level_choice}',
                                                     f'lv{self.level_choice}')
                 if (result == 2):
@@ -713,7 +635,7 @@ class WorkThread_1 (QThread):
 
         #点击join进入到选人的界面
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/join', 'join')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/join', 'join')
             if (result ==2):
                 self.signal.emit(str('join点击完成'))
             else:
@@ -722,7 +644,7 @@ class WorkThread_1 (QThread):
 
         #判断体力是否耗尽，正常情况应该是1，耗尽会变成2
         time.sleep(0.2)
-        self.LP_full = find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/no_lp/no_lp','no_lp')
+        self.LP_full = click_action.find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/no_lp/no_lp', 'no_lp')
         self.signal.emit(str(f'体力是否耗尽的状态是{self.LP_full}，1是体力还能继续打，2是不能打了，要开始判断是否喝药或者暂停'))
 
         #如果体力耗尽，判断是否要结束或者喝药
@@ -733,7 +655,7 @@ class WorkThread_1 (QThread):
                 guaji_1 = 2
             else:
                 while (guaji_1 == 1 and result == 1):
-                    result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/no_lp/ok', 'ok')
+                    result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/no_lp/ok', 'ok')
                     if (result == 2):
                         self.signal.emit(str('ok点击完成，完成喝药'))
                     else:
@@ -744,7 +666,7 @@ class WorkThread_1 (QThread):
 
         #点击play理论上进入战斗，实际上不一定，可能体力回满一类的
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/join/play', 'play')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/join/play', 'play')
             if (result ==2):
                 self.signal.emit(str('play点击完成'))
             else:
@@ -757,7 +679,7 @@ class WorkThread_1 (QThread):
         #为了防止延迟出现，这里等待3s
         time.sleep(3)
         #判断是否打满，1是没打满，默认值，2是打满
-        self.join_full=find_item_with_result(self,f'./aim/quests/link_raid/backup_requests/join/full/battle_full','battle_full')
+        self.join_full= click_action.find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/join/full/battle_full', 'battle_full')
         if(self.join_full==1):
             self.signal.emit(str('没有打满，现在应该已经在战斗状态了'))
         else:
@@ -766,7 +688,7 @@ class WorkThread_1 (QThread):
         result = 1
         #如果说打满了，要把ok点掉，这里需要多判断一个条件
         while(guaji_1==1 and result ==1 and self.join_full==2):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/join/full/ok', 'ok')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/join/full/ok', 'ok')
             if (result ==2):
                 self.signal.emit(str('ok点击完成'))
             else:
@@ -787,7 +709,7 @@ class WorkThread_1 (QThread):
         result = 1
         #点击左边的joined battle，这一段理论上是没用的，它是防止出现游戏延迟，直接跑到下面去运行
         while(guaji_1==1 and result ==1 and self.join_full==2):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles', 'joined_battles')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/joined_battles', 'joined_battles')
             if (result ==2):
                 self.signal.emit(str('joined_battles点击完成，这一个点击主要为了防止延迟'))
             else:
@@ -795,14 +717,14 @@ class WorkThread_1 (QThread):
         result = 1
 
         #判断是否完成清理所有的win/lose
-        self.join_full=find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
+        self.join_full= click_action.find_item_with_result(self, './aim/quests/link_raid/joined_battles/win', 'win/lose')
         self.signal.emit(str(f'win/loss的状态是{self.join_full}，1是没有了，2是还存在'))
 
         if(self.join_full==1):
             result = 1
             # 点击第二层backup_requests，进入到加入界面
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/backup_requests',
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/backup_requests',
                                                 'backup_requests')
                 if (result == 2):
                     self.signal.emit(str('第二层的backup_requests点击完成'))
@@ -822,7 +744,7 @@ class WorkThread_1 (QThread):
         time.sleep(0.5)
 
         # 确认战斗是否结束
-        self.already_end = find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/join/full/already_end','already_end')
+        self.already_end = click_action.find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/join/full/already_end', 'already_end')
         self.signal.emit(str(f'战斗是否已经结束的状态是{self.already_end}，1是没有结束，2是结束了'))
 
         #如果战斗已经结束，点击ok，然后点击刷新
@@ -830,7 +752,7 @@ class WorkThread_1 (QThread):
             result=1
             #点击ok
             while (guaji_1 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/quests/link_raid/backup_requests/join/ok','ok')
+                result = click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/join/ok', 'ok')
                 if (result == 2):
                     self.signal.emit(str('ok点击完成'))
                 else:
@@ -842,7 +764,7 @@ class WorkThread_1 (QThread):
             self.join_battle()
 
             #再次判断，只要脸够黑，就能连着结束
-            self.already_end = find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/join/full/already_end','already_end')
+            self.already_end = click_action.find_item_with_result(self, f'./aim/quests/link_raid/backup_requests/join/full/already_end', 'already_end')
             self.signal.emit(str(f'战斗是否已经结束的状态是{self.already_end}，1是没有结束，2是结束了'))
 
     #完成战斗，然后点back。点击战斗结束会出来的tap_to_countinue
@@ -851,7 +773,7 @@ class WorkThread_1 (QThread):
 
         #点击结算界面的tap_to_countinue
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/tap_to_countinue', 'tap_to_countinue')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/tap_to_countinue', 'tap_to_countinue')
             if (result ==2):
                 self.signal.emit(str('tap_to_countinue点击完成'))
             else:
@@ -860,7 +782,7 @@ class WorkThread_1 (QThread):
 
         #点击结算界面界面的back，点完后回到boss打脸的界面
         while(guaji_1==1 and result ==1):
-            result=click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/back', 'back')
+            result= click_action.click_item_with_result(self, './aim/quests/link_raid/backup_requests/battle/back', 'back')
             if (result ==2):
                 self.signal.emit(str('back点击完成，一场战斗结束了'))
             else:
@@ -893,6 +815,9 @@ class WorkThread_2 (QThread):
         self.signal.emit(str(f'需要在选择完成关卡和队伍的界面启动。也就是点一下play就进入战斗的界面'))
 
         time.sleep(2)
+        click_action.click_position(1000, 500)
+        self.signal.emit(str('把游戏弄到前台，然后随便碰一下中间'))
+        time.sleep(1)
 
         self.click_play()
         #执行部分
@@ -912,7 +837,7 @@ class WorkThread_2 (QThread):
 
             # 在主界面点击quests
         while (guaji_2 == 1 and result == 1):
-            result = click_item_with_result(self, './aim/crystalis/play', 'play')
+            result = click_action.click_item_with_result(self, './aim/crystalis/play', 'play')
             if (result == 2):
                 self.signal.emit(str('play点击完成'))
             else:
@@ -924,14 +849,14 @@ class WorkThread_2 (QThread):
 
 
             #战斗结束后，右上角会出现result，点击整个右侧屏幕的任何地方几次就会让它出现retry
-            result = click_item_with_result(self, './aim/crystalis/result', 'result')
+            result = click_action.click_item_with_result(self, './aim/crystalis/result', 'result')
             if (result == 2):
                 self.signal.emit(str('result点击完成，点了之后会出现retry'))
             else:
                 self.signal.emit(str('result没有找到，还在战斗状态'))
 
             if (result ==2):
-                check_win = find_item_with_result(self,f'./aim/crystalis/retry','retry')
+                check_win = click_action.find_item_with_result(self, f'./aim/crystalis/retry', 'retry')
                 self.signal.emit(str(f'result被点击过一次，尝试寻找retry，具体的状态是{check_win}，1是没有找到，2是找到了'))
 
 
@@ -939,7 +864,7 @@ class WorkThread_2 (QThread):
         global guaji_2
         result=1
         while (guaji_2 == 1 and result == 1):
-            result = click_item_with_result(self, './aim/crystalis/retry', 'retry')
+            result = click_action.click_item_with_result(self, './aim/crystalis/retry', 'retry')
             if (result == 2):
                 self.signal.emit(str('retry点击完成'))
             else:
@@ -947,7 +872,7 @@ class WorkThread_2 (QThread):
 
         time.sleep(2) #等待确保延迟
             #寻找是否存在体力耗尽
-        if(find_item_with_result(self, './aim/crystalis/ok', 'ok')==2):
+        if(click_action.find_item_with_result(self, './aim/crystalis/ok', 'ok')==2):
             self.lp_recover=self.lp_recover-1
             self.signal.emit(str(f'体力用完了，剩余体力恢复次数还是{self.lp_recover}'))
             if(self.lp_recover==0):
@@ -955,7 +880,7 @@ class WorkThread_2 (QThread):
 
             result = 1
             while (guaji_2 == 1 and result == 1):
-                result = click_item_with_result(self, './aim/crystalis/ok', 'ok')
+                result = click_action.click_item_with_result(self, './aim/crystalis/ok', 'ok')
                 if (result == 2):
                     self.signal.emit(str('ok点击完成，体力完成恢复'))
                     time.sleep(5)#防止瞬间出现的retry干扰
@@ -982,13 +907,11 @@ if __name__ == '__main__':
         except FileNotFoundError:
             return None
 
-
     def get_executable_directory():
         if hasattr(sys, '_MEIPASS'):
             return os.path.dirname(sys.executable)  # 获取打包后可执行文件的真实路径
         else:
             return os.path.dirname(os.path.abspath(__file__))  # 获取脚本路径
-
 
     folder_path = get_executable_directory()
     print('运行路径：', folder_path)
@@ -1005,6 +928,7 @@ if __name__ == '__main__':
         BASE_PATH = os.path.dirname(__file__)
         print(f'脚本执行路径：{BASE_PATH}')
         os.chdir(BASE_PATH)
+
 
     #这里开始是正常的pyside6的启动，前面的是据说能让导出稳定的东西
     app = QApplication([])
